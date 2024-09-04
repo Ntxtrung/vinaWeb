@@ -7,17 +7,25 @@ from django_countries.fields import CountryField
 # Create your models here.
 class Area(models.Model):
     name = models.CharField(max_length=200)
-    cost = models.DecimalField(max_digits=10, decimal_places=2)
 
     def __str__(self):
         return self.name
+
+
+class Job(models.Model):
+    name = models.CharField(max_length=5)
+    cost = models.DecimalField(max_digits=10, decimal_places=2)
+    area = models.ForeignKey(Area, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.name + " - " + self.area.name + " - " + str(self.cost)
 
 
 class Client(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=200)
     country = CountryField(blank_label="(Select country)")
-    area = models.ForeignKey(Area, on_delete=models.CASCADE)
+    area = models.ForeignKey(Area, on_delete=models.SET_NULL, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
