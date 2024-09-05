@@ -1,7 +1,7 @@
 from django.db import models
 from django.utils.text import slugify
 
-from clients.models import Client
+from clients.models import Client, Job
 
 # Create your models here.
 
@@ -34,6 +34,7 @@ class Package(models.Model):
 
 class Shot(models.Model):
     package = models.ForeignKey(Package, on_delete=models.CASCADE)
+    job = models.ForeignKey(Job, on_delete=models.SET_NULL, null=True)
     shot_id = models.CharField(max_length=36, blank=True)
     shot_name = models.CharField(max_length=200)
     created_at = models.DateTimeField(auto_now_add=True)
