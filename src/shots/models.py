@@ -21,11 +21,13 @@ class Project(ItemsBase):
     client = models.ForeignKey(Client, on_delete=models.CASCADE)
 
     def __str__(self):
-        return self.name
+        return f"{self.name} from {self.client.name}"
 
 
 class Package(ItemsBase):
-    project = models.ForeignKey(Project, on_delete=models.CASCADE)
+    project = models.ForeignKey(
+        Project, on_delete=models.CASCADE, related_name="packages"
+    )
     slug = models.SlugField(blank=True)
 
     def __str__(self):
