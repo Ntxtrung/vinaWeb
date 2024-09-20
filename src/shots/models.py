@@ -3,6 +3,7 @@ import uuid
 from clients.models import Client, Job
 from django.db import models
 from django.utils.text import slugify
+from django.utils import timezone
 
 # Create your models here.
 
@@ -25,18 +26,27 @@ class Project(ItemsBase):
 
 
 class Package(ItemsBase):
-    project = models.ForeignKey(
-        Project, on_delete=models.CASCADE, related_name="packages"
-    )
+    project = models.ForeignKey(Project, on_delete=models.CASCADE)
     slug = models.SlugField(blank=True)
+    earliest_delivery = models.DateField(null=True, blank=True)
+    latest_delivery = models.DateField(null=True, blank=True)
 
     def __str__(self):
-        return f"{self.name} - {self.created_at}"  # Corrected to use self.name
+        return f"{self.name} - {self.created_at}"
 
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = slugify(self.name)
         super().save(*args, **kwargs)
+        self.update_package_delivery_dates()
+
+    def update_package_delivery_dates(self):
+        shots = self.shots.all()
+        delivery_dates = [shot.delivery_date for shot in shots if shot.delivery_date]
+        if delivery_dates:
+            self.earliest_delivery = min(delivery_dates)
+            self.latest_delivery = max(delivery_dates)
+            super().save(update_fields=["earliest_delivery", "latest_delivery"])
 
 
 class Shot(ItemsBase):
@@ -47,6 +57,7 @@ class Shot(ItemsBase):
     shot_id = models.CharField(max_length=36, unique=True, editable=False)
     word_ref = models.TextField(blank=True)
     annotations = models.ImageField(upload_to="annotations/", blank=True)
+    delivery_date = models.DateField(null=True, blank=True)
 
     def __str__(self):
         return f"{self.name} - {self.package.name} - {self.package.project.name}"
@@ -55,3 +66,4 @@ class Shot(ItemsBase):
         if not self.shot_id:
             self.shot_id = str(uuid.uuid4())
         super().save(*args, **kwargs)
+        self.package.update_package_delivery_dates()

@@ -1,0 +1,63 @@
+{% extends 'base.html' %} {% block content %}
+<h1>Create New Package</h1>
+<form method="post">
+  {% csrf_token %}
+  <h2>Package Details</h2>
+  {{ package_form.as_p }}
+
+  <h2>Shots (Add up to 5 shots)</h2>
+  {{ shot_formset.management_form }}
+  <table id="shot-table">
+    <thead>
+      <tr>
+        <th>Shot Name</th>
+        <th>Reference Text</th>
+        <th>Delivery Date</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for form in shot_formset %}
+      <tr data-shot-id="{{ form.instance.id }}">
+        <td>{{ form.name }}</td>
+        <td>{{ form.word_ref }}</td>
+        <td>{{ form.delivery_date }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <button type="submit">Create Package</button>
+</form>
+
+<script>
+  document.querySelectorAll('input[type="date"]').forEach(function (input) {
+    input.addEventListener("change", function () {
+      var shotId = this.closest("tr").dataset.shotId;
+      var deliveryDate = this.value;
+      var csrfToken = document.querySelector(
+        "[name=csrfmiddlewaretoken]"
+      ).value;
+
+      fetch(`/shots/update_shot_delivery_date/${shotId}/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+          "X-CSRFToken": csrfToken,
+        },
+        body: `delivery_date=${deliveryDate}`,
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.error) {
+            console.error(data.error);
+          } else {
+            document.getElementById("earliest-delivery").textContent =
+              data.earliest_delivery;
+            document.getElementById("latest-delivery").textContent =
+              data.latest_delivery;
+          }
+        })
+        .catch((error) => console.error("Error:", error));
+    });
+  });
+</script>
+{% endblock %}

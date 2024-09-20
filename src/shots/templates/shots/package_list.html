@@ -1,0 +1,23 @@
+{% extends 'base.html' %} {% block content %}
+<h1>Packages</h1>
+<a href="{% url 'package_create' %}">Create New Package</a>
+<ul>
+  {% for package in packages %}
+  <li>
+    {{ package.name }} - {{ package.project.name }} (Delivery:
+    <span id="earliest-delivery">{{ package.earliest_delivery }}</span> -
+    <span id="latest-delivery">{{ package.latest_delivery }}</span>)
+    <ul>
+      {% for shot in package.shots.all %}
+      <li data-shot-id="{{ shot.id }}">
+        {{ shot.name }} - {{ shot.word_ref }} {% if shot.delivery_date %}
+        (Delivery: {{ shot.delivery_date }}) {% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+  </li>
+  {% empty %}
+  <li>No packages available.</li>
+  {% endfor %}
+</ul>
+{% endblock %}
