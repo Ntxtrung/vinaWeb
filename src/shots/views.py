@@ -1,11 +1,20 @@
-from django.shortcuts import render, redirect
+from django.db import transaction
 from django.forms import formset_factory
+from django.http import HttpResponseRedirect, JsonResponse
+from django.shortcuts import redirect, render
+
 from .forms import PackageForm, ShotFormSet
 from .models import Package, Shot
-from django.db import transaction
-from django.http import JsonResponse
 
 # Create your views here.
+
+
+def change_theme(request):
+    if "is_darkMode" in request.session:
+        request.session["is_darkMode"] = not request.session["is_darkMode"]
+    else:
+        request.session["is_darkMode"] = True
+    return HttpResponseRedirect(request.META.get("HTTP_REFERER", "/"))
 
 
 def shot_list(request):

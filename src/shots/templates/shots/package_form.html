@@ -1,31 +1,33 @@
 {% extends 'base.html' %} {% block content %}
-<h1>Create New Package</h1>
-<form method="post">
+<h1 class="text-2xl font-bold mb-4">Create New Package</h1>
+<form method="post" class="bg-white p-6 rounded shadow-md">
   {% csrf_token %}
-  <h2>Package Details</h2>
-  {{ package_form.as_p }}
+  <h2 class="text-xl font-semibold mb-2">Package Details</h2>
+  <div class="mb-4">{{ package_form.as_p }}</div>
 
-  <h2>Shots (Add up to 5 shots)</h2>
+  <h2 class="text-xl font-semibold mb-2">Shots (Add up to 5 shots)</h2>
   {{ shot_formset.management_form }}
-  <table id="shot-table">
+  <table id="shot-table" class="min-w-full bg-white">
     <thead>
       <tr>
-        <th>Shot Name</th>
-        <th>Reference Text</th>
-        <th>Delivery Date</th>
+        <th class="py-2">Shot Name</th>
+        <th class="py-2">Reference Text</th>
+        <th class="py-2">Delivery Date</th>
       </tr>
     </thead>
     <tbody>
       {% for form in shot_formset %}
-      <tr data-shot-id="{{ form.instance.id }}">
-        <td>{{ form.name }}</td>
-        <td>{{ form.word_ref }}</td>
-        <td>{{ form.delivery_date }}</td>
+      <tr class="border-t" data-shot-id="{{ form.instance.id }}">
+        <td class="py-2">{{ form.name }}</td>
+        <td class="py-2">{{ form.word_ref }}</td>
+        <td class="py-2">{{ form.delivery_date }}</td>
       </tr>
       {% endfor %}
     </tbody>
   </table>
-  <button type="submit">Create Package</button>
+  <button type="submit" class="mt-4 bg-blue-500 text-white py-2 px-4 rounded">
+    Create Package
+  </button>
 </form>
 
 <script>
