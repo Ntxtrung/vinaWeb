@@ -1,34 +1,45 @@
 from django import forms
+from django.core.exceptions import ValidationError
+from django.forms import modelformset_factory
 
-from .models import Shot, Package
-
-
-class ShotForm(forms.ModelForm):
-    class Meta:
-        model = Shot
-        fields = ["name", "word_ref", "delivery_date"]
-        widgets = {"delivery_date": forms.DateInput(attrs={"type": "date"})}
+from .models import Client, Package, Project, Shot
 
 
 class PackageForm(forms.ModelForm):
     class Meta:
         model = Package
-        fields = ["name", "project", "earliest_delivery", "latest_delivery"]
+        fields = ["package_name"]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if "project" in self.fields:
+            self.fields["package_name"].required = False
+
+
+class ShotForm(forms.ModelForm):
+    class Meta:
+        model = Shot
+        fields = ["shot_name", "md", "word_ref", "delivery_date", "status"]
         widgets = {
-            "earliest_delivery": forms.DateInput(attrs={"type": "date"}),
-            "latest_delivery": forms.DateInput(attrs={"type": "date"}),
+            "delivery_date": forms.DateInput(attrs={"type": "date"}),
         }
 
 
-class ShotFormSet(forms.BaseModelFormSet):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.queryset = Shot.objects.none()
-
-
-ShotFormSet = forms.modelformset_factory(
+ShotFormSet = modelformset_factory(
     Shot,
     form=ShotForm,
-    extra=5,  # Tạo 5 form trống
-    max_num=5,  # Giới hạn tối đa 5 shots
+    extra=1,
+    can_delete=True,
+    max_num=None,  # Cho phép số lượng form không giới hạn
+    validate_max=False,  # Không kiểm tra giới hạn tối đa
 )
+
+
+class ProjectForm(forms.ModelForm):
+    client = forms.ModelChoiceField(
+        queryset=Client.objects.all(), empty_label="Select a client", required=True
+    )
+
+    class Meta:
+        model = Project
+        fields = ["project_name", "client"]

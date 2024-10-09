@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     "tailwind",
     "theme",
     "django_browser_reload",
+    "widget_tweaks",
 ]
 
 TAILWIND_APP_NAME = "theme"
@@ -95,7 +96,7 @@ WSGI_APPLICATION = "core.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.mysql",
-        "NAME": "vinadb",
+        "NAME": "vinadb02",
         "USER": "root",
         "PASSWORD": "Admin@123",
         "HOST": "",
@@ -139,6 +140,12 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
 STATIC_URL = "static/"
+MEDIA_URL = "/media/"
+STATICFILES_DIRS = [
+    BASE_DIR / "static",
+    BASE_DIR / "shots/static",
+]
+MEDIA_ROOT = BASE_DIR / "media"
 
 
 # Default primary key field type
