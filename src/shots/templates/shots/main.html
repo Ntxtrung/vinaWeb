@@ -1,0 +1,215 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load widget_tweaks %}
+
+{% block scripts %}
+  <script src="{% static 'shots/main.js' %}" defer></script>
+  <script src="{% static 'js/form_modal.js' %}" defer></script>
+{% endblock scripts %}
+
+{% block title %} Package List {% endblock title %}
+
+{% block content %}
+  
+  <!-- Alert Messages Section -->
+  {% if messages %}
+    {% for message in messages %}
+      {% if 'info' in message.tags %}
+        {% include 'components/alert.html' with is_info=True title="Success" body=message %}
+      {% elif 'error' in message.tags %}
+        {% include 'components/alert.html' with is_info=False title="Error" body=message %}
+      {% endif %}
+    {% endfor %}
+  {% endif %}
+
+  <!-- Header Section -->
+  {% include 'components/header.html' with title="Package List" description="view package theo tháng" is_form_available=True icon="<i class='fa-solid fa-plus'></i>" %}
+
+  <!-- Thêm nút này vào đầu trang, sau phần header -->
+<div class="mb-4">
+  <a href="{% url 'shots:overview' %}" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+    Switch to Overview
+  </a>
+</div>
+
+  <!-- Filter Section (Month and Year) -->
+  <div class="filter-section mb-4 flex items-center space-x-4">
+    <div class="flex items-center">
+      <label for="month-select" class="mr-2 text-sm font-medium text-gray-700 dark:text-gray-300">Month:</label>
+      <select id="month-select" name="month" class="w-32 py-2 px-3 border bg-white rounded-md focus:ring-indigo-500 dark:bg-gray-700">
+        {% for month_value, month_name in months %}
+          <option value="{{ month_value }}" {% if selected_month == month_value %}selected{% endif %}>{{ month_name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="flex items-center">
+      <label for="year-select" class="mr-2 text-sm font-medium text-gray-700 dark:text-gray-300">Year:</label>
+      <select id="year-select" name="year" class="w-24 py-2 px-3 border bg-white rounded-md focus:ring-indigo-500 dark:bg-gray-700">
+        {% for year in years %}
+          <option value="{{ year }}" {% if selected_year == year %}selected{% endif %}>{{ year }}</option>
+        {% endfor %}
+      </select>
+    </div>
+  </div>
+
+  <div class="flex flex-col lg:flex-row">
+    <!-- Package List Section -->
+    <div class="package-list-section lg:w-4/5 pr-4">
+      <h2 class="text-lg font-semibold dark:text-white mb-4">Package List</h2>
+      {% if packages %}
+        <table class="min-w-full divide-y dark:divide-gray-700">
+          <thead class="bg-gray-50 dark:bg-gray-800">
+            <tr>
+              <th class="px-4 py-3 text-left text-sm font-bold text-gray-900 dark:text-gray-100">Client Name</th>
+              <th class="px-4 py-3 text-left text-sm font-bold text-gray-900 dark:text-gray-100">Project Name</th>
+              <th class="px-4 py-3 text-left text-sm font-bold text-gray-900 dark:text-gray-100">Package Name</th>
+              <th class="px-4 py-3 text-center text-sm font-bold text-gray-900 dark:text-gray-100">Roto MD</th>
+              <th class="px-4 py-3 text-center text-sm font-bold text-gray-900 dark:text-gray-100">Paint MD</th>
+              <th class="px-4 py-3 text-center text-sm font-bold text-gray-900 dark:text-gray-100">Track MD</th>
+              <th class="px-4 py-3 text-center text-sm font-bold text-gray-900 dark:text-gray-100">Comp MD</th>
+              <th class="px-4 py-3 text-left text-sm font-bold text-gray-900 dark:text-gray-100">Delivery Dates</th>
+              <th class="px-4 py-3 text-center text-sm font-bold text-gray-900 dark:text-gray-100">Status</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white dark:bg-gray-900">
+            {% for package in packages %}
+            <tr class="{% if forloop.counter|divisibleby:2 %}bg-gray-50 dark:bg-gray-800{% endif %}">
+              <td class="px-4 py-4">{{ package.project.client.name }}</td>
+              <td class="px-4 py-4">{{ package.project.project_name }}</td>
+              <td class="px-4 py-4">
+                <a href="{% url 'shots:detail_package' slug=package.slug %}" class="text-blue-600 hover:text-blue-800">{{ package.package_name }}</a>
+              </td>
+              <td class="px-4 py-4 text-center text-blue-600 dark:text-blue-400">{{ package.total_roto_md|floatformat:2 }}</td>
+              <td class="px-4 py-4 text-center text-green-600 dark:text-green-400">{{ package.total_paint_md|floatformat:2 }}</td>
+              <td class="px-4 py-4 text-center text-yellow-600 dark:text-yellow-400">{{ package.total_track_md|floatformat:2 }}</td>
+              <td class="px-4 py-4 text-center text-red-600 dark:text-red-400">{{ package.total_comp_md|floatformat:2 }}</td>
+              <td class="px-4 py-4">
+                {% if package.earliest_delivery == package.latest_delivery %}
+                  {{ package.earliest_delivery|date:"D, M.d"|default:"None" }}
+                {% else %}
+                  {{ package.earliest_delivery|date:"D, M.d"|default:"None" }} - {{ package.latest_delivery|date:"D, M.d"|default:"None" }}
+                {% endif %}
+              </td>
+              <td class="px-4 py-4 text-center">
+                {% if package.go and not package.done %}
+                  <span class="px-2 py-1 bg-yellow-100 text-yellow-800 font-medium">GO</span>
+                {% elif package.done and package.go %}
+                  <span class="px-2 py-1 bg-green-100 text-green-800 font-medium">DONE</span>
+                {% elif not package.go and not package.done and package.active %}
+                  <span class="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-400 font-medium">BIDDING</span>
+                {% elif not package.active and not package.done and not package.go %}
+                  <span class="px-2 py-1 bg-red-100 text-red-800 font-medium">HOLD</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p>No packages found</p>
+      {% endif %}
+    </div>
+
+    <!-- Summary Section -->
+    <div class="summary-section lg:w-1/5">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-semibold dark:text-white">TOTAL MD</h2>
+        <div class="flex items-center">
+          <label for="summary-status" class="mr-2 text-sm font-medium text-gray-700 dark:text-gray-300">Status:</label>
+          <select id="summary-status" class="w-36 py-2 px-3 border rounded-md focus:ring-indigo-500 dark:bg-gray-700">
+            <option value="go_and_done" {% if selected_summary_status == 'go_and_done' %}selected{% endif %}>GO & DONE</option>
+            <option value="go" {% if selected_summary_status == 'go' %}selected{% endif %}>GO Only</option>
+            <option value="done" {% if selected_summary_status == 'done' %}selected{% endif %}>DONE Only</option>
+            <option value="all" {% if selected_summary_status == 'all' %}selected{% endif %}>All Status</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Summary Table -->
+      <table class="min-w-full divide-y dark:divide-gray-700">
+        <thead class="bg-gray-50 dark:bg-gray-800">
+          <tr>
+            <th class="px-4 py-3 text-left text-sm font-bold text-gray-900 dark:text-gray-100">Area</th>
+            <th class="px-4 py-3 text-center text-sm font-bold text-gray-900 dark:text-gray-100">Roto</th>
+            <th class="px-4 py-3 text-center text-sm font-bold text-gray-900 dark:text-gray-100">Paint</th>
+            <th class="px-4 py-3 text-center text-sm font-bold text-gray-900 dark:text-gray-100">Track</th>
+            <th class="px-4 py-3 text-center text-sm font-bold text-gray-900 dark:text-gray-100">Comp</th>
+          </tr>
+        </thead>
+        <tbody class="bg-white dark:bg-gray-900">
+          <!-- Studio8FX -->
+          <tr>
+            <td class="px-4 py-4 font-semibold">Studio8FX</td>
+            <td id="studio8fx-roto" class="px-4 py-4 text-center text-blue-600 dark:text-blue-400 font-medium">{{ studio8fx_md.roto }}</td>
+            <td id="studio8fx-paint" class="px-4 py-4 text-center text-green-600 dark:text-green-400 font-medium">{{ studio8fx_md.paint }}</td>
+            <td id="studio8fx-track" class="px-4 py-4 text-center text-yellow-600 dark:text-yellow-400 font-medium">{{ studio8fx_md.track }}</td>
+            <td id="studio8fx-comp" class="px-4 py-4 text-center text-red-600 dark:text-red-400 font-medium">{{ studio8fx_md.comp }}</td>
+          </tr>
+          <!-- Others -->
+          <tr class="bg-gray-50 dark:bg-gray-800">
+            <td class="px-4 py-4 font-semibold">Others</td>
+            <td id="others-roto" class="px-4 py-4 text-center text-blue-600 dark:text-blue-400 font-medium">{{ other_md.roto }}</td>
+            <td id="others-paint" class="px-4 py-4 text-center text-green-600 dark:text-green-400 font-medium">{{ other_md.paint }}</td>
+            <td id="others-track" class="px-4 py-4 text-center text-yellow-600 dark:text-yellow-400 font-medium">{{ other_md.track }}</td>
+            <td id="others-comp" class="px-4 py-4 text-center text-red-600 dark:text-red-400 font-medium">{{ other_md.comp }}</td>
+          </tr>
+          <!-- Total -->
+          <tr class="bg-blue-50 dark:bg-blue-900">
+            <td class="px-4 py-4 font-bold">Total</td>
+            <td id="total-roto" class="px-4 py-4 text-center font-bold text-blue-700 dark:text-blue-300">{{ total_md.roto }}</td>
+            <td id="total-paint" class="px-4 py-4 text-center font-bold text-green-700 dark:text-green-300">{{ total_md.paint }}</td>
+            <td id="total-track" class="px-4 py-4 text-center font-bold text-yellow-700 dark:text-yellow-300">{{ total_md.track }}</td>
+            <td id="total-comp" class="px-4 py-4 text-center font-bold text-red-700 dark:text-red-300">{{ total_md.comp }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Modal for Adding New Package -->
+  <div class="hidden relative z-10" aria-labelledby="modal-title" role="dialog" aria-modal="true" id="form-modal">
+    <div class="fixed inset-0 bg-gray-500 bg-opacity-75"></div>
+    <div class="fixed inset-0 z-10 overflow-y-auto">
+      <div class="flex min-h-full items-center justify-center p-4" id="backdrop">
+        <div class="relative transform rounded-lg shadow-xl my-8 max-w-lg w-full">
+          <form action="" method="POST">
+            {% csrf_token %}
+            <div class="bg-white dark:bg-slate-800 pt-5 pb-4 px-8">
+              <div class="mt-3 text-left">
+                <h2 class="text-xl font-medium leading-6 dark:text-white" id="modal-title">Add new package</h2>
+                <div class="mt-3">
+                  <div class="mb-2">
+                    <label for="{{form.name.id_for_label}}" class="block dark:text-white">Package Name: </label>
+                    {{form.name|add_class:'bg-slate-100 dark:bg-slate-700 rounded p-2 w-full'}}
+                  </div>
+                  <div class="mb-2">
+                    <label for="{{form.project.id_for_label}}" class="block dark:text-white">Project Name: </label>
+                    {{form.project|add_class:'bg-slate-100 dark:bg-slate-700 rounded p-2 w-full'}}
+                  </div>
+                  <div class="mb-2">
+                    <label for="{{form.earliest_delivery.id_for_label}}" class="block dark:text-white">Earliest delivery: </label>
+                    {{form.earliest_delivery|attr:"type=date"|add_class:'bg-slate-100 dark:bg-slate-700 rounded p-2 w-full'}}
+                  </div>
+                  <div class="mb-2">
+                    <label for="{{form.latest_delivery.id_for_label}}" class="block dark:text-white">Latest delivery: </label>
+                    {{form.latest_delivery|attr:"type=date"|add_class:'bg-slate-100 dark:bg-slate-700 rounded p-2 w-full'}}
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="bg-gray-50 dark:bg-slate-900 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+              <button type="submit" class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded">
+                Save
+              </button>
+              <button type="button" id="cancel-btn" class="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 border border-red-600 rounded mr-3">
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+{% endblock content %}
+

@@ -1,0 +1,9 @@
+{% extends 'base.html' %} {% block content %}
+<h1>Shots</h1>
+<a href="{% url 'shot_create' %}">Add New Shot</a>
+<ul>
+  {% for shot in shots %}
+  <li>{{ shot.name }} - {{ shot.package.name }} - {{ shot.status }}</li>  <!-- Thêm {{ shot.status }} -->
+  {% endfor %}
+</ul>
+{% endblock %}

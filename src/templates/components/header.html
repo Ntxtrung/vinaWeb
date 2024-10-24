@@ -1,0 +1,18 @@
+<div class="bg-orange-400 text-white mb-10 p-4 flex justify-between h-[80px] items-center px-6">
+    <div class="flex-col">
+        <div class="text-2xl">{{title}} </div>
+        <div class="text-sm">{{description}}</div>
+    </div>
+    <div>
+        {% if is_form_available %}
+            <div>
+                <button class="bg-transparent border-6 px-4 py-2 rounded-md" id="create-package-btn">{{icon}}</button>
+            </div>
+        {% endif %}
+        {% if is_go_back %}
+            <div>
+                <button class="bg-transparent border-6 px-4 py-2 rounded-md" id="go-back-btn"><i class="fa-solid fa-arrow-left"></i></button>
+            </div>
+        {% endif %}
+    </div>
+</div>

@@ -1,0 +1,8 @@
+{% load shot_tags %}
+<select id="bulk-status" class="mt-1 block w-full py-2 px-3  border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+    <option value="">STATUS</option>
+    {% get_status_choices as status_choices %}
+    {% for value, label in status_choices %}
+      <option value="{{ value }}">{{ label }}</option>
+    {% endfor %}
+</select>

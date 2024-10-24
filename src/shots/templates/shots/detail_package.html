@@ -1,0 +1,167 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load shot_tags %}
+{% block scripts %}
+    {{ block.super }}
+    <!-- <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> -->
+    <script src="{% static 'shots/main.js' %}" defer></script>
+    <script src="{% static 'main.js' %}" defer></script>
+    <!-- <script src="{% static 'js/form_summary.js' %}" defer></script> -->
+{% endblock scripts %}
+
+{% block title %} Detail Package {% endblock title %}
+
+{% block content %}
+<div class="container mx-auto p-6">
+    {% include 'components/header.html' with title=package.package_name description=shot_count|stringformat:"d shots" is_go_back=True %}
+    <input type="hidden" id="packageName" value="{{ package.package_name }}">
+    <div class="flex flex-col lg:flex-row lg:space-x-6">
+        <!-- Table on the left -->
+        <div class="lg:w-4/5">
+            {% if messages %}
+                <div class="mb-4">
+                    {% for message in messages %}
+                        <div class="p-4 {% if message.tags == 'success' %}bg-green-100 text-green-700{% else %}bg-red-100 text-red-700{% endif %} rounded-md">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            {% if object_list %}
+                <form method="post" action="">
+                    {% csrf_token %}
+                    <div class="overflow-x-auto bg-white dark:bg-gray-800 shadow-md rounded-lg">
+                        <table id="shot-table" class="min-w-full">
+                            <thead class="bg-gray-50 dark:bg-gray-700">
+                                <tr>
+                                    <th scope="col" class="px-1 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider w-1/6">Shot Name</th>
+                                    <th scope="col" class="px-0.5 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider w-20">Roto</th>
+                                    <th scope="col" class="px-0.5 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider w-20">Paint</th>
+                                    <th scope="col" class="px-0.5 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider w-20">Track</th>
+                                    <th scope="col" class="px-0.5 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider w-20">Comp</th>
+                                    <th scope="col" class="px-1 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider w-1/3">Word Ref</th>
+                                    <th scope="col" class="px-1 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider w-32">{% include 'components/delivery_date_btn.html' %}</th>
+                                    <th scope="col" class="px-1 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider w-32">{% include 'components/status_choice.html' %}</th>
+                                    <th scope="col" class="px-1 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider w-20">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white dark:bg-gray-800">
+                                {% for shot in object_list %}
+                                    <tr class="border-b border-gray-200 dark:border-gray-700">
+                                        <td class="px-1 py-2 whitespace-nowrap">
+                                            <input type="text" name="{{ shot.id }}-shot_name" value="{{ shot.shot_name }}" class="form-input w-full text-sm" required>
+                                        </td>
+                                        <td class="px-0.5 py-2 whitespace-nowrap">
+                                            <input type="number" name="{{ shot.id }}-md_roto" value="{{ shot.md_roto|default_if_none:'' }}" class="form-input w-full text-sm text-center" step="0.01" min="0" max="99.99">
+                                        </td>
+                                        <td class="px-0.5 py-2 whitespace-nowrap">
+                                            <input type="number" name="{{ shot.id }}-md_paint" value="{{ shot.md_paint|default_if_none:'' }}" class="form-input w-full text-sm text-center" step="0.01">
+                                        </td>
+                                        <td class="px-0.5 py-2 whitespace-nowrap">
+                                            <input type="number" name="{{ shot.id }}-md_track" value="{{ shot.md_track|default_if_none:'' }}" class="form-input w-full text-sm text-center" step="0.01">
+                                        </td>
+                                        <td class="px-0.5 py-2 whitespace-nowrap">
+                                            <input type="number" name="{{ shot.id }}-md_comp" value="{{ shot.md_comp|default_if_none:'' }}" class="form-input w-full text-sm text-center" step="0.01">
+                                        </td>
+                                        <td class="px-1 py-2 whitespace-nowrap">
+                                            <input type="text" name="{{ shot.id }}-word_ref" value="{{ shot.word_ref }}" class="form-input w-full text-sm">
+                                        </td>
+                                        <td class="px-1 py-2 whitespace-nowrap">
+                                            <input type="date" name="{{ shot.id }}-delivery_date" value="{{ shot.delivery_date|date:'Y-m-d' }}" class="form-input w-full text-sm">
+                                        </td>
+                                        <td class="px-1 py-2 whitespace-nowrap">
+                                            <select name="{{ shot.id }}-status" class="form-select w-full text-sm">
+                                                {% for status in shot_statuses %}
+                                                    <option value="{{ status.0 }}" {% if shot.status == status.0 %}selected{% endif %}>
+                                                        {{ status.1 }}
+                                                    </option>
+                                                {% endfor %}
+                                            </select>
+                                        </td>
+                                        <td class="px-1 py-2 whitespace-nowrap">
+                                            <button type="submit" name="delete" value="{{ shot.id }}" class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 text-sm" onclick="return confirm('Are you sure you want to delete this shot?')">Delete</button>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                                <!-- Thêm textarea ẩn này vào cuối body -->
+                                <textarea id="copyArea" style="position: absolute; left: -9999px;"></textarea>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="mt-4">
+                        <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                            Save Changes
+                        </button>
+                        <button id="copyToClipboard" class="bg-green-500 hover:bg-green-700 text-black font-bold py-2 px-4 rounded">
+                            Copy to Clipboard
+                        </button>
+                        <!-- Trong template hiển thị chi tiết package -->
+                        <a href="{% url 'shots:preview_invoice' package.id %}" class="btn btn-primary">Generate Invoice PDF</a>
+                    </div>
+                    
+                    
+                </form>
+            {% else %}
+                <p class="text-gray-600 dark:text-gray-400">No shots available for this package.</p>
+            {% endif %}
+        </div>
+
+        <!-- Summary on the right -->
+        <div class="lg:w-1/5 mt-6 lg:mt-0">
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md package-summary sticky top-6">
+                <h3 class="text-lg font-semibold mb-4 dark:text-white">Package Summary</h3>
+                <div class="space-y-4">
+                    {% if summary.total_shots %}
+                    <div class="summary-item flex items-center justify-between pb-2 border-b border-gray-200 dark:border-gray-700">
+                        <div class="text-gray-600 dark:text-gray-400">Total Shots:</div>
+                        <div class="font-bold text-gray-900 dark:text-white">{{ summary.total_shots }}</div>
+                    </div>
+                    {% endif %}
+                    {% if summary.total_roto %}
+                    <div class="summary-item roto-summary">
+                        <div class="flex items-center justify-between">
+                            <div class="text-gray-600 dark:text-gray-400">Roto:</div>
+                            <div class="font-bold text-gray-900 dark:text-white">
+                                {{ summary.roto_shots|default_if_none:0 }} shots -- {{ summary.total_roto|default_if_none:0|floatformat:2 }} MD
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% if summary.total_paint %}
+                    <div class="summary-item paint-summary">
+                        <div class="flex items-center justify-between">
+                            <div class="text-gray-600 dark:text-gray-400">Paint:</div>
+                            <div class="font-bold text-gray-900 dark:text-white">
+                                {{ summary.paint_shots|default_if_none:0 }} shots -- {{ summary.total_paint|default_if_none:0|floatformat:2 }} MD
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% if summary.total_track %}
+                    <div class="summary-item track-summary">
+                        <div class="flex items-center justify-between">
+                            <div class="text-gray-600 dark:text-gray-400">Track:</div>
+                            <div class="font-bold text-gray-900 dark:text-white">
+                                {{ summary.track_shots|default_if_none:0 }} shots -- {{ summary.total_track|default_if_none:0|floatformat:2 }} MD
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% if summary.total_comp %}
+                    <div class="summary-item comp-summary">
+                        <div class="flex items-center justify-between">
+                            <div class="text-gray-600 dark:text-gray-400">Comp:</div>
+                            <div class="font-bold text-gray-900 dark:text-white">
+                                {{ summary.comp_shots|default_if_none:0 }} shots -- {{ summary.total_comp|default_if_none:0|floatformat:2 }} MD
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}

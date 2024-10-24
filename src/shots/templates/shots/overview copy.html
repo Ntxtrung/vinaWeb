@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Overview{% endblock title %}
+
+{% block content %}
+  <!-- Header Section -->
+  {% include 'components/header.html' with title="Overview" description="GO and BIDDING Packages" %}
+
+  <!-- Toggle Button -->
+  <div class="mb-4 text-right">
+    <a href="{% url 'shots:main' %}" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded inline-flex items-center">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5 mr-2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M3 12h18m0 0l-6-6m6 6l-6 6" />
+      </svg>
+      Switch to Main View
+    </a>
+  </div>
+
+  <!-- Tables Container with Tabs -->
+  <div class="tabs">
+    <div class="tab-buttons flex border-b mb-4">
+      <button class="tab-button px-4 py-2 text-gray-600 hover:text-blue-600 focus:text-blue-600 border-b-2 focus:border-blue-600" data-tab="go-packages">GO Packages</button>
+      <button class="tab-button px-4 py-2 text-gray-600 hover:text-blue-600 focus:text-blue-600 border-b-2 focus:border-blue-600" data-tab="bidding-packages">BIDDING Packages</button>
+    </div>
+
+    <!-- GO Packages Table -->
+    <div class="tab-content" id="go-packages">
+      <h2 class="text-xl font-bold mb-4">GO Packages</h2>
+      <div class="overflow-x-auto rounded-lg border border-gray-200 shadow">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Package Name</th>
+              <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Client - Project</th>
+              <th class="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">Roto MD</th>
+              <th class="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">Paint MD</th>
+              <th class="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">Track MD</th>
+              <th class="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">Comp MD</th>
+              <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Delivery Date</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            {% for package in go_packages %}
+              <tr class="hover:bg-gray-50">
+                <td class="px-6 py-4 whitespace-nowrap">{{ package.package_name }}</td>
+                <td class="px-6 py-4 whitespace-nowrap">{{ package.project.client.name }} - {{ package.project.project_name }}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-center">{{ package.total_roto|floatformat:2 }}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-center">{{ package.total_paint|floatformat:2 }}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-center">{{ package.total_track|floatformat:2 }}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-center">{{ package.total_comp|floatformat:2 }}</td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  {% if package.earliest_delivery == package.latest_delivery %}
+                    {{ package.earliest_delivery|date:"Y-m-d" }}
+                  {% else %}
+                    {{ package.earliest_delivery|date:"Y-m-d" }} to {{ package.latest_delivery|date:"Y-m-d" }}
+                  {% endif %}
+                </td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="7" class="px-6 py-4 text-center">No GO packages found</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- BIDDING Packages Table -->
+    <div class="tab-content hidden" id="bidding-packages">
+      <h2 class="text-xl font-bold mb-4">BIDDING Packages</h2>
+      <div class="overflow-x-auto rounded-lg border border-gray-200 shadow">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Package Name</th>
+              <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Client - Project</th>
+              <th class="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">Roto MD</th>
+              <th class="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">Paint MD</th>
+              <th class="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">Track MD</th>
+              <th class="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">Comp MD</th>
+              <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Delivery Date</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            {% for package in bidding_packages %}
+              <tr class="hover:bg-gray-50">
+                <td class="px-6 py-4 whitespace-nowrap">{{ package.package_name }}</td>
+                <td class="px-6 py-4 whitespace-nowrap">{{ package.project.client.name }} - {{ package.project.project_name }}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-center">{{ package.total_roto|floatformat:2 }}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-center">{{ package.total_paint|floatformat:2 }}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-center">{{ package.total_track|floatformat:2 }}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-center">{{ package.total_comp|floatformat:2 }}</td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  {% if package.earliest_delivery == package.latest_delivery %}
+                    {{ package.earliest_delivery|date:"Y-m-d" }}
+                  {% else %}
+                    {{ package.earliest_delivery|date:"Y-m-d" }} to {{ package.latest_delivery|date:"Y-m-d" }}
+                  {% endif %}
+                </td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="7" class="px-6 py-4 text-center">No BIDDING packages found</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Tab functionality
+    document.querySelectorAll('.tab-button').forEach(button => {
+      button.addEventListener('click', () => {
+        document.querySelectorAll('.tab-content').forEach(content => {
+          content.classList.add('hidden');
+        });
+        document.getElementById(button.dataset.tab).classList.remove('hidden');
+      });
+    });
+  </script>
+{% endblock content %}
