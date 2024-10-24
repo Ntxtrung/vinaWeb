@@ -27,6 +27,7 @@ urlpatterns = [
     path("switch/", change_theme, name="change"),
     path("shots/", include("shots.urls", namespace="shots")),
     path("__reload__/", include("django_browser_reload.urls")),
+    path("api/", include("shots.urls", namespace="api")),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

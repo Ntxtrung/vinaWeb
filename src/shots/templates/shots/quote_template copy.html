@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Invoice</title>
+    <style>
+        /* Thêm CSS styles ở đây */
+        @page {
+            size: letter;
+            margin: 2cm;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 9pt;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            page-break-inside: auto;
+        }
+        tr {
+            page-break-inside: avoid;
+            page-break-after: auto;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 2px;
+            text-align: center;
+            word-wrap: break-word;
+            max-width: 150px; /* Adjust as needed */
+        }
+        .header {
+            background-color: #f2f2f2;
+        }
+        @media screen {
+        body {
+            width: 100%;
+            height: auto;
+            margin: 0;
+            padding: 20px;
+            }
+        }
+        @media print {
+            @page {
+                size: letter;
+                margin: 2cm;
+            }
+            body {
+                width: 21.59cm;
+                height: 27.94cm;
+                margin: 0 auto;
+                padding: 2cm;
+                box-sizing: border-box;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <img src="{{ logo_path }}" alt="Logo" style="width: 100px; height: auto;">
+        <h1>QUOTATION</h1>
+    </div>
+    <table>
+        <tr>
+            <td>To:</td>
+            <td>{{ package.project.client.name }}</td>
+        </tr>
+        <tr>
+            <td>Attn:</td>
+            <td>{{ package.project.client.contact_person }}</td>
+        </tr>
+        <tr>
+            <td>Client:</td>
+            <td>{{ package.project.client.name }}</td>
+        </tr>
+        <tr>
+            <td>Package:</td>
+            <td>{{ package.package_name }}</td>
+        </tr>
+        <tr>
+            <td>Date:</td>
+            <td>{{ current_date }}</td>
+        </tr>
+    </table>
+    <br>
+    <table>
+        <tr>
+            <th>Shot / SEQ</th>
+            <th>TRACK</th>
+            <th>ROTO</th>
+            <th>PAINT</th>
+            <th>Rate</th>
+        </tr>
+        {% for shot in shots %}
+        <tr>
+            <td>{{ shot.shot_name|truncatechars:20 }}</td>
+            <td>{% if shot.md_track %}${{ shot.md_track|floatformat:2 }}{% endif %}</td>
+            <td>{% if shot.md_roto %}${{ shot.md_roto|floatformat:2 }}{% endif %}</td>
+            <td>{% if shot.md_paint %}${{ shot.md_paint|floatformat:2 }}{% endif %}</td>
+            <td>${{ shot.total_rate|floatformat:2 }}</td>
+        </tr>
+        {% endfor %}
+        <tr>
+            <td>Total</td>
+            <td>${{ total_track|floatformat:2 }}</td>
+            <td>${{ total_roto|floatformat:2 }}</td>
+            <td>${{ total_paint|floatformat:2 }}</td>
+            <td>${{ total_rate|floatformat:2 }}</td>
+        </tr>
+    </table>
+    <br>
+    <div>
+        <h3>Notes:</h3>
+        <p>{{ notes }}</p>
+    </div>
+    <br>
+    <table>
+        <tr>
+            <td>Vinamation</td>
+            <td></td>
+            <td>Time:</td>
+            <td>{{ total_days }} days</td>
+        </tr>
+        <tr>
+            <td></td>
+            <td></td>
+            <td>Cost:</td>
+            <td>${{ total_rate|floatformat:2 }} USD</td>
+        </tr>
+    </table>
+    <div style="margin-top: 20px;">
+        <a href="{% url 'shots:generate_invoice_pdf' package.id %}" class="btn btn-primary">Download PDF</a>
+        <a href="{% url 'shots:detail_package' package.slug %}" class="btn btn-secondary">Back to Package</a>
+    </div>
+</body>
+</html>

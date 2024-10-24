@@ -5,6 +5,7 @@ let undoStack = [];
 function saveCurrentState() {
     let formData = {
         totalForms: document.getElementById('id_form-TOTAL_FORMS').value,
+
         rowCount: document.querySelectorAll('#shot-table tbody tr').length,
         changedFields: {} // Chỉ lưu các trường thay đổi
     };

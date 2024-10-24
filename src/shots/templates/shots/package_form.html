@@ -3,82 +3,204 @@
 {% load widget_tweaks %}
 {% load form_tags %}
 {% load static %}
+{% load shot_tags %}
 
 {% block scripts %}
   {{ block.super }}
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="{% static 'js/form_undo.js' %}" defer></script>
   <script src="{% static 'js/form_package.js' %}" defer></script>
+  <script src="{% static 'js/form_modal.js' %}" defer></script>
+  <script src="{% static 'shots/main.js' %}" defer></script>
+  <script src="{% static 'js/form_summary.js' %}" defer></script>
+  <!-- <script src="{% static 'main.js' %} "defer></script> -->
+
 {% endblock scripts %}
 
 {% block content %}
-<!-- Tạo mới Package -->
-<h1 class="text-2xl font-bold mb-4 dark:text-white">Create New Package</h1>
-<form method="post" action="" class="bg-white dark:bg-gray-800 p-6 rounded shadow-md">
+
+{% include 'components/header.html' with title="Create New Package" is_go_back=True %}
+
+<form method="post" action="">
   {% csrf_token %}
 
-  {% if package_form.non_field_errors %}
-  <div class="alert alert-danger">
-      {{ package_form.non_field_errors }}
-  </div>
-  {% endif %}
+<div class="bg-white dark:bg-gray-800 p-6 rounded shadow-md">
+  <div class="grid grid-cols-2 gap-6">
+    <!-- Left column: Client, Project, Package -->
+    <div>
+      
+        {% if package_form.non_field_errors %}
+        <div class="alert alert-danger">
+            {{ package_form.non_field_errors }}
+        </div>
+        {% endif %}
 
-  <h2 class="text-xl font-semibold mb-2 dark:text-gray-300">Project Details</h2>
-  <div class="mb-4 space-y-4">
-    {{ project_form.non_field_errors }}
-    <div class="dark:text-white">
-      {{ project_form.project_name.label_tag }}<br>
-      {{ project_form.project_name }}
-      {{ project_form.project_name.errors }}
-    </div>
-    <div class="dark:text-white">
-      {{ project_form.client.label_tag }}<br>
-      {{ project_form.client }}
-      {{ project_form.client.errors }}
-    </div>
-  </div>
+        <!-- Select Client -->
+        <div class="mb-4 space-y-2">
+          {{ project_form.non_field_errors }}
+          <div class="dark:text-white">
+            {{ project_form.client.label_tag }}
+          </div>
+          <div class="flex items-center space-x-2">
+            <select name="client" id="client-select" required class="form-select block w-full">
+              <option value="">Chọn Client</option>
+              {% for client in clients %}
+                  <option value="{{ client.id }}">{{ client.name }}</option>
+              {% endfor %}
+            </select>
+            <button class="bg-transparent border-gray-300 hover:bg-gray-100 dark:border-gray-600 dark:hover:bg-gray-700 px-4 py-2 rounded border" id="open-client-modal-btn">
+              <i class="fa-solid fa-plus"></i>
+            </button>
+          </div>
+          {{ project_form.client.errors }}
+        </div>
 
-  <h2 class="text-xl font-semibold mb-2 dark:text-gray-300">Package Details</h2>
-  <div class="mb-4 space-y-4">
-    {{ package_form.non_field_errors }}
-    <div class="dark:text-white">
-      {{ package_form.package_name.label_tag }}<br>
-      {{ package_form.package_name }}
-      {{ package_form.package_name.errors }}
+        <!-- Select Project -->
+        <div class="mb-4 space-y-2">
+          {{ package_form.non_field_errors }}
+          <div class="dark:text-white">
+            <label for="project-select">{{ package_form.project.label }}</label>
+          </div>
+          <div class="flex items-center space-x-2">
+            <select name="project" id="project-select" required class="form-select block w-full">
+              <option value="">Chọn Project</option>
+              {% if project_form.fields.client.queryset %}
+                  {% for project in project_form.fields.client.queryset %}
+                      <option value="{{ project.id }}">{{ project.project_name }}</option>
+                  {% endfor %}
+              {% endif %}
+            </select>
+            <button class="bg-transparent border-gray-300 hover:bg-gray-100 dark:border-gray-600 dark:hover:bg-gray-700 px-4 py-2 rounded border" id="open-project-modal-btn">
+              <i class="fa-solid fa-plus"></i>
+            </button>
+          </div>
+          {{ package_form.project.errors }}
+        </div>
+
+        <!-- Create Package Name -->
+        <div class="mb-4 space-y-2">
+          {{ package_form.non_field_errors }}
+          <div class="dark:text-white">
+            <label for="project-select">{{ package_form.package_name.label_tag }}</label>
+          </div>
+          <div class="flex items-center space-x-2 dark:text-white">
+            {{ package_form.package_name|add_class:"form-input w-full" }}
+            <div id="package-name-error" class="text-red-500 text-sm mt-1"></div>
+            {{ package_form.package_name.errors }}
+          </div>
+        </div>
+      </div>
+
+    <!-- Right column: Package Summary -->
+    <div class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg package-summary">
+      <h3 class="text-lg font-semibold mb-2 dark:text-white">Package Summary</h3>
+      <div class="space-y-2">
+        <div class="summary-item flex items-center justify-left pb-2 border-b border-gray-300 dark:border-gray-600">
+          <div class="dark:text-gray-300">Total Shots:</div>
+          <div class="font-bold dark:text-white" id="total-shots" style="margin-left: 10px;">0</div>
+        </div>
+        <div class="mt-2 space-y-2">
+          <div class="summary-item roto-summary">
+            <div class="flex items-center justify-left">
+              <div class="dark:text-gray-300">Roto:</div>
+              <div class="font-bold dark:text-white" style="margin-left: 10px;">
+                <span id="roto-shots">0</span> shots -- <span id="total-roto">0</span> MD
+              </div>
+            </div>
+          </div>
+          <div class="summary-item paint-summary">
+            <div class="flex items-center justify-left" style="margin-left: 10px;">
+              <div class="dark:text-gray-300">Paint:</div>
+              <div class="font-bold dark:text-white">
+                <span id="paint-shots">0</span> shots -- <span id="total-paint">0</span> MD
+              </div>
+            </div>
+          </div>
+          <div class="summary-item track-summary">
+            <div class="flex items-center justify-left" style="margin-left: 10px;">
+              <div class="dark:text-gray-300">Track:</div>
+              <div class="font-bold dark:text-white">
+                <span id="track-shots">0</span> shots -- <span id="total-track">0</span> MD
+              </div>
+            </div>
+          </div>
+          <div class="summary-item comp-summary">
+            <div class="flex items-center justify-left" style="margin-left: 10px;">
+              <div class="dark:text-gray-300">Comp:</div>
+              <div class="font-bold dark:text-white">
+                <span id="comp-shots">0</span> shots -- <span id="total-comp">0</span> MD
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
+</div>
 
-  <div class="mb-4">
-    <label for="bulk-delivery-date" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Set Delivery Date for All Shots:</label>
-    <input type="date" id="bulk-delivery-date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-    <button type="button" id="apply-bulk-date" class="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">Apply to All Shots</button>
-  </div>
 
   <!-- Shot formset -->
   {{ shot_formset.management_form }}
+
+  <div class="mt-4 py-3">
+    <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white  py-2 px-4 rounded shadow-md">
+      Save Package
+    </button>
+  </div>
+  
   <table id="shot-table" class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-    <thead class="bg-gray-50 dark:bg-gray-800">
+    <thead class="bg-gray-100">
       <tr>
-        {% for field in shot_formset.forms.0 %}
-          {% if field.label != 'Delete' and not field.is_hidden %}
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">{{ field.label }}</th>
-          {% endif %}
-        {% endfor %}
-        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
+        <th scope="col" class="px-6 py-3 text-center   text-xs font-medium text-gray-500 uppercase tracking-wider">Shot Name</th>
+          
+          <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Roto</th>
+          <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Paint</th>
+          <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Track</th>
+          <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Comp</th>
+          <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Word Ref</th>
+        <!-- Cột delivery date -->
+        <th class="px-6 py-3 relative">
+          {% include 'components/delivery_date_btn.html' %}
+          
+        </th>
+        
+        <!-- Cột status -->
+        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+          {% include 'components/status_choice.html' %}
+        </th>
+        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
       </tr>
     </thead>
-    <tbody class="bg-white divide-y divide-gray-200 dark:bg-gray-900 dark:divide-gray-700">
+    <tbody class="bg-white divide-y divide-gray-200">
       {% for form in shot_formset %}
-        <tr>
-          {% for field in form.visible_fields %}
-            <td class="px-6 py-4 whitespace-nowrap">
-              {% if field.name == 'DELETE' %}
-                <button type="button" class="delete-row text-red-600 hover:text-red-900">Delete</button>
-              {% else %}
-                {{ field|add_class:"form-input rounded-md shadow-sm mt-1 block w-full" }}
-              {% endif %}
-              {{ field.errors }}
-            </td>
-          {% endfor %}
+        <tr class="hover:bg-gray-50">
+          <td class="px-6 py-4 whitespace-nowrap w-1/4">
+            {{ form.shot_name|add_class:"form-input rounded-md shadow-sm mt-1 block w-full text-sm" }}
+          </td>
+          <td class="px-2 py-4 whitespace-nowrap w-12">
+            {{ form.md_roto|add_class:"form-input rounded-md shadow-sm mt-1 block w-full text-sm text-center" }}
+          </td>
+          <td class="px-2 py-4 whitespace-nowrap w-12">
+            {{ form.md_paint|add_class:"form-input rounded-md shadow-sm mt-1 block w-full text-sm text-center" }}
+          </td>
+          <td class="px-2 py-4 whitespace-nowrap w-12">
+            {{ form.md_track|add_class:"form-input rounded-md shadow-sm mt-1 block w-full text-sm text-center" }}
+          </td>
+          <td class="px-2 py-4 whitespace-nowrap w-12">
+            {{ form.md_comp|add_class:"form-input rounded-md shadow-sm mt-1 block w-full text-sm text-center" }}
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap w-1/3">
+            {{ form.word_ref|add_class:"form-input rounded-md shadow-sm mt-1 block w-full text-sm h-10 resize-none" }}
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap w-1/8">
+            {{ form.delivery_date|add_class:"form-input rounded-md shadow-sm mt-1 block w-full text-sm" }}
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap w-1/6">
+            {{ form.status|add_class:"form-select rounded-md shadow-sm mt-1 block w-full text-sm" }}
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap w-24">
+            <button type="button" class="delete-row text-red-600 hover:text-red-900">Delete</button>
+          </td>
           {% for hidden in form.hidden_fields %}
             {{ hidden }}
           {% endfor %}
@@ -86,9 +208,91 @@
       {% endfor %}
     </tbody>
   </table>
-
-  <div class="mt-4">
-    <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">Save Package</button>
-  </div>
+ 
 </form>
+
+
+  
+  <!-- Modal tạo nhanh client -->
+<!-- form modal -->
+<div class="hidden relative z-10" aria-labelledby="modal-title" role="dialog" aria-modal="true" id="form-client-modal">
+  <div class="fixed inset-0 bg-gray-500 bg-opacity-75"></div>
+  <div class="fixed inset-0 z-10 overflow-y-auto">
+      <div class="flex min-h-full items-center justify-center p-4 text-center" id="backdrop-client">
+          <div class="relative transform overflow-hidden rounded-lg text-left shadow-xl transition-all my-8 max-w-lg w-full">
+            <form id="client-form" action="" >
+              {% csrf_token %}
+              <div class="bg-white dark:text-white dark:bg-slate-300 pt-5 pb-4 px-8">
+                  <div class="mt-3 text-left">
+                      <h2 class="text-xl font-medium leading-6 text-gray-900" id="modal-title">
+                          Add new client
+                      </h2>
+                      <div class="mt-3">
+                          <div class="mb-2">
+                              <label for="{{client_form.name.id_for_label}}" class="block text-slate-800 dark:text-slate-900">New Client Name: </label>
+                              {{client_form.name|add_class:'bg-slate-100 dark:bg-slate-300 text-slate-400 rounded p-2 w-full'}}
+                          </div>
+                         
+                          <div class="mb-2">
+                              <label for="{{client_form.area.id_for_label}}" class="block text-slate-800 dark:text-slate-900">Area: </label>
+                              {{client_form.area|add_class:'bg-slate-100 dark:bg-slate-300 text-slate-400 rounded p-2 w-full'}}
+                          </div>
+                      </div>
+                  </div>
+              </div>
+              <div class="bg-gray-50 dark:text-white dark:bg-slate-400 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+                  <button type="submit" class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded">
+                      Save
+                  </button>
+                  <button type="button" id="cancel-client-btn" class="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 border border-red-600 rounded mr-3">
+                      Cancel
+                  </button>
+              </div>
+          </form>
+          </div>
+      </div>
+  </div>
+</div>
+
+<!-- Modal Create Project -->
+<div class="hidden relative z-10" aria-labelledby="modal-title" role="dialog" aria-modal="true" id="form-project-modal">
+  <div class="fixed inset-0 bg-gray-500 bg-opacity-75"></div>
+  <div class="fixed inset-0 z-10 overflow-y-auto">
+      <div class="flex min-h-full items-center justify-center p-4 text-center" id="backdrop-project">
+          <div class="relative transform overflow-hidden rounded-lg text-left shadow-xl transition-all my-8 max-w-lg w-full">
+            <form id="project-form" action="" >
+              <input type="hidden" id="project_client_id" name="client" value="">
+              {% csrf_token %}
+              <div class="bg-white dark:text-white dark:bg-slate-300 pt-5 pb-4 px-8">
+                  <div class="mt-3 text-left">
+                      <h2 class="text-xl font-medium leading-6 text-gray-900" id="modal-title">
+                          Create New Project
+                      </h2>
+                      <div class="mt-3">
+                          <div class="mb-2">
+                            <input type="text" name="project_name" id="project_name" required
+                            class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+                            placeholder="Project Name">
+                          </div>
+                          
+                      </div>
+                  </div>
+              </div>
+              <div class="bg-gray-50 dark:text-white dark:bg-slate-400 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+                  <button type="submit"  class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded">
+                      Save
+                  </button>
+                  <button type="button" id="cancel-project-btn" class="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 border border-red-600 rounded mr-3">
+                      Cancel
+                  </button>
+              </div>
+          </form>
+          </div>
+      </div>
+  </div>
+</div>
 {% endblock content %}
+
+
+
+

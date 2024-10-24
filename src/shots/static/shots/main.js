@@ -61,6 +61,46 @@ function cancelEdit() {
     }
 }
 
+document.addEventListener('DOMContentLoaded', function () {
+    const summaryStatusSelect = document.getElementById('summary-status');
+    const monthSelect = document.getElementById('month-select');
+    const yearSelect = document.getElementById('year-select');
+
+    summaryStatusSelect.addEventListener('change', function () {
+        const month = monthSelect.value;
+        const year = yearSelect.value;
+        const summaryStatus = this.value;
+
+        // Sử dụng fetch để lấy dữ liệu mới cho summary
+        fetch(`/shots/summary/?month=${month}&year=${year}&status=${summaryStatus}`)
+            .then(response => response.json())
+            .then(data => {
+                // Cập nhật các giá trị trong bảng summary
+                updateSummaryTable(data);
+            });
+    });
+
+    function updateSummaryTable(data) {
+        // Cập nhật Studio8FX row
+        document.getElementById('studio8fx-roto').textContent = data.studio8fx_md.roto;
+        document.getElementById('studio8fx-paint').textContent = data.studio8fx_md.paint;
+        document.getElementById('studio8fx-track').textContent = data.studio8fx_md.track;
+        document.getElementById('studio8fx-comp').textContent = data.studio8fx_md.comp;
+
+        // Cập nhật Others row
+        document.getElementById('others-roto').textContent = data.other_md.roto;
+        document.getElementById('others-paint').textContent = data.other_md.paint;
+        document.getElementById('others-track').textContent = data.other_md.track;
+        document.getElementById('others-comp').textContent = data.other_md.comp;
+
+        // Cập nhật Total row
+        document.getElementById('total-roto').textContent = data.total_md.roto;
+        document.getElementById('total-paint').textContent = data.total_md.paint;
+        document.getElementById('total-track').textContent = data.total_md.track;
+        document.getElementById('total-comp').textContent = data.total_md.comp;
+    }
+});
+
 // Ensure these functions are available globally if needed
 window.editShot = editShot;
 window.cancelEdit = cancelEdit;

@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+{% load static %}
+{% load humanize %}
+<head>
+  <title>Vinamation Quote</title>
+  <style>
+    /* Reset và styles cơ bản */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    /* Các styles chung */
+    body {
+      position: relative;
+      margin: 0 auto;
+      color: #001028;
+      background: #FFFFFF; 
+      font-family: Arial, sans-serif; 
+      font-size: 14px;
+    }
+
+    /* Header styles */
+    header {
+      padding: 10px 0;
+      margin-bottom: 30px;
+    }
+
+    .clearfix:after {
+      content: "";
+      display: table;
+      clear: both;
+    }
+
+    /* Info container styles - Sử dụng table thay vì flexbox */
+    .info-container {
+      width: 100%;
+      margin: 20px 0;
+    }
+
+    .info-table {
+      width: 100%;
+      border: none;
+    }
+
+    .info-table td {
+      vertical-align: top;
+      padding: 5px;
+      border: none;
+    }
+
+    .project-value {
+        color: #000;
+        text-align: right;    /* Màu đen cho giá trị */
+        font-weight: normal;
+    }
+
+    .project-info div {
+        margin-bottom: 2px;  /* Khoảng cách giữa các dòng */
+    }
+
+    .project-info {
+        width: 50%;
+        text-align: left;
+        font-size: 14px;
+    }
+
+    
+    .company-info {
+      width: 50%;
+      text-align: right;
+      font-size: 12px;  
+    }
+
+    .label {
+      color: #5D6975;
+      width: 35px;
+      display: inline-block;
+      margin-right: 10px;
+      font-size: 14px;  /* Giảm font size cho labels */
+      text-align: right;
+    }
+
+    /* Table styles - Phần quan trọng để điều chỉnh độ rộng cột */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;  /* Quan trọng để control được width */
+      margin-bottom: 20px;
+    }
+
+    /* Định nghĩa độ rộng cho từng cột - Dễ điều chỉnh */
+    .col-shot { width: 35%; }     /* Cột SHOT/SEQ */
+    .col-roto { width: 13%; }     /* Cột ROTO */
+    .col-paint { width: 13%; }    /* Cột PAINT */
+    .col-track { width: 13%; }    /* Cột TRACK */
+    .col-comp { width: 13%; }     /* Cột COMP */
+    .col-rate { width: 13%; }     /* Cột RATE */
+
+    /* Styles cho header */
+    thead tr {
+      background-color: #c2c2c2;  /* Màu đậm hơn cho header */
+      color: #5D6975;
+      font-weight: bold;
+    }
+
+    /* Màu xám nhạt xen kẽ cho các hàng */
+    tbody tr:nth-child(even) {
+      background-color: #b0b0b0;  /* Màu xám nhạt cho hàng chẵn */
+    }
+
+    tbody tr:nth-child(odd) {
+      background-color: #ffffff;  /* Màu trắng cho hàng lẻ */
+    }
+
+
+    /* Style cho hàng tổng cộng */
+    tr.total-row {
+      background-color: #f0f0f0;  /* Màu nền khác cho hàng tổng */
+      font-weight: normal;
+    }
+
+    /* Footer */
+    footer {
+      color: #5D6975;
+      width: 100%;
+      height: 30px;
+      position: absolute;
+      bottom: 0;
+      border-top: 1px solid #C1CED9;
+      padding: 8px 0;
+      text-align: center;
+      font-size: 1.2em;
+    }
+
+    /* Styles cho bảng chính */
+    .main-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+    }
+
+    /* Header của bảng - tất cả header căn giữa */
+    .main-table th {
+      background-color: #e0e0e0;
+      text-align: center !important;
+      padding-top: 8px;
+      padding-left: 10px;
+
+    }
+
+    /* Tất cả cells căn giữa mặc định */
+    .main-table td {
+      text-align: center !important;
+      padding-top: 8px;
+      padding-left: 10px;
+    }
+
+    /* Chỉ cột đầu tiên căn trái */
+    .main-table td:first-child {
+      text-align: left !important;
+    }
+
+    /* Màu cho các hàng */
+    .row-odd {
+      background-color: #ffffff;
+    }
+
+    .row-even {
+      background-color: #f2f2f2;
+    }
+  </style>
+</head>
+
+<body>
+  <header class="clearfix">
+
+    <div class="info-container">
+        <table class="info-table">
+            <tr>
+                <td class="project-info">
+                    <h1>QUOTATION</h1>
+                    <div>
+                        <span class="label">TO:</span>
+                        <span class="project-value">{{ package.project.client.name }}</span>
+                    </div>
+                    <div>
+                        <span class="label">ATTN:</span>
+                        <span class="project-value">
+                            <a href="mailto:{{ package.project.client.contact_person }}" style="color: #000; text-decoration: none;">
+                                {{ package.project.client.contact_person }}
+                            </a>
+                        </span>
+                    </div>
+                    <div>
+                        <span class="label">JOB:</span>
+                        <span class="project-value">{{ package.package_name }}</span>
+                    </div>
+                    <div>
+                        <span class="label">DATE:</span>
+                        <span class="project-value">{{ current_date }}</span>
+                    </div>
+                </td>
+                <td class="company-info">
+                    <div id="logo" style="text-align: right; margin-bottom: 10px;">
+                        <img src="{{ logo_data_uri }}" 
+                             class="brand-logo" 
+                             width="200" 
+                             height="35" 
+                             >
+                    </div>
+                    
+                    <div>74 Street 1, Trung Son Area</div>
+                    <div>BinhHung, BinhChanh, </div>
+                    <div>HoChiMinh City, Vietnam</div>
+                    <div><a href="www.vinamation.com">www.vinamation.com</a></div>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <br>
+    <br>
+  </header>
+  
+  <div class="table-container" style="overflow-x:auto">
+    <table class="main-table">
+      <thead>
+        <tr style="background-color: #e0e0e0;">
+          <th style="text-align: left;">SHOT / SEQ</th>
+          <th style="text-align: center; color: #404040;">ROTO</th>
+          <th style="text-align: center; color: #606060;">PAINT</th>
+          <th style="text-align: center; color: #808080;">TRACK</th>
+          <th style="text-align: center; color: #909090;">COMP</th>
+          <th style="text-align: center; color: #202020;">RATE</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for shot_detail in shots_details %}
+        <tr class="{% cycle 'row-odd' 'row-even' %}">
+          <td style="text-align: left;">{{ shot_detail.shot.shot_name|truncatechars:35 }}</td>
+          <td style="text-align: center; color: #404040;">
+            {% if shot_detail.details.roto %}
+              ${{ shot_detail.details.roto.cost|floatformat:2|intcomma }}
+            {% endif %}
+          </td>
+          <td style="text-align: center; color: #606060">
+            {% if shot_detail.details.paint %}
+              ${{ shot_detail.details.paint.cost|floatformat:2|intcomma }}
+            {% endif %}
+          </td>
+          <td style="text-align: center; color: #808080;">
+            {% if shot_detail.details.track %}
+              ${{ shot_detail.details.track.cost|floatformat:2|intcomma }}
+            {% endif %}
+          </td>
+          <td style="text-align: center; color: #909090;">
+            {% if shot_detail.details.comp %}
+              ${{ shot_detail.details.comp.cost|floatformat:2|intcomma }}
+            {% endif %}
+          </td>
+          <td style="text-align: center; color: #202020;">${{ shot_detail.total_cost|floatformat:2|intcomma }}</td>
+        </tr>
+        {% endfor %}
+        <tr style="background-color: #fdeee2;">
+            <td class="col-shot">TOTAL</td>
+            <td class="col-roto"style="color: #404040;">${{ total_roto|floatformat:2|intcomma }}</td>
+            <td class="col-paint"style="color: #606060;">${{ total_paint|floatformat:2|intcomma }}</td>
+            <td class="col-track"style="color: #808080;">${{ total_track|floatformat:2|intcomma }}</td>
+            <td class="col-comp"style="color: #909090;">${{ total_comp|floatformat:2|intcomma }}</td>
+            <td class="col-rate">${{ total_cost|floatformat:2|intcomma }}</td>
+        </tr>
+      </tbody>
+    </table>
+    
+    <!-- Phần totals -->
+    <div style="margin-top: 20px; text-align: right;">
+        <div style="font-size: 1.2em;">
+            <span style="color: #777777;">TOTAL:</span>
+            <span style="color: #404040;">${{ total_cost|floatformat:2|intcomma }}</span>
+        </div>    
+        <div style="font-size: 1.2em; margin-top: 10px;">
+            <span style="color: #777777;">with 10% VAT:</span>
+            <span style="color: #404040;">${{ total_with_vat|floatformat:2|intcomma }}</span>
+        </div>
+    </div>
+    <div style="margin-top: 20px;">
+    {% if not is_pdf %}
+      <a href="{% url 'shots:generate_invoice_pdf' package.id %}" class="btn btn-primary">Download PDF</a>
+      <a href="{% url 'shots:detail_package' package.slug %}" class="btn btn-secondary">Back to Package</a>
+    {% endif %}
+  </div>
+  
+</body>
+
+</html>
